@@ -4,9 +4,10 @@ import "./hero.css";
 
 const FIRST_SCENE_MS = 4200;
 
-export default function Hero() {
+export default function Hero({ onEnterDashboard }) {
   const [phase, setPhase] = useState("intro");
   const audioRef = useRef(null);
+  const transitionVideoRef = useRef(null);
 
   const playBgm = useCallback(async () => {
     if (!audioRef.current) return;
@@ -41,6 +42,11 @@ export default function Hero() {
       window.removeEventListener("keydown", unlockAudio);
     };
   }, [playBgm]);
+
+  useEffect(() => {
+    if (phase !== "transition" || !transitionVideoRef.current) return;
+    transitionVideoRef.current.playbackRate = 0.82;
+  }, [phase]);
 
   return (
     <div className="ww-shell">
@@ -81,7 +87,7 @@ export default function Hero() {
               INITIALIZING WORLD STREAM...
             </motion.p>
           </motion.section>
-        ) : (
+        ) : phase === "main" ? (
           <motion.section
             key="main"
             className="scene scene-main"
@@ -92,7 +98,7 @@ export default function Hero() {
             <div className="scene-video scene-main-video" aria-hidden="true" />
             <div className="scene-vignette" />
 
-            <p className="ww-logo-corner">WUTHERING WAVES</p>
+            <p className="ww-logo-corner">dipa</p>
 
             <motion.div
               className="scene-main-content"
@@ -100,12 +106,39 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.4 }}
             >
-              <h2 className="scene-title">RESOUND, ROVER.</h2>
-              <button className="enter-btn" type="button" onClick={playBgm}>
+              <button
+                className="enter-btn"
+                type="button"
+                onClick={() => {
+                  void playBgm();
+                  setPhase("transition");
+                }}
+              >
                 TAP TO ENTER
               </button>
-              <p className="scene-hint">SEA SERVER | v0.0.1</p>
+              <p className="scene-hint">dipa | v0.0.1</p>
             </motion.div>
+          </motion.section>
+        ) : (
+          <motion.section
+            key="transition"
+            className="scene scene-transition"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+          >
+            <video
+              ref={transitionVideoRef}
+              className="scene-transition-media"
+              src="/videos/login.mp4"
+              autoPlay
+              muted
+              playsInline
+              onEnded={() => onEnterDashboard?.()}
+              onError={() => onEnterDashboard?.()}
+            />
+            <div className="scene-transition-flash" />
           </motion.section>
         )}
       </AnimatePresence>
